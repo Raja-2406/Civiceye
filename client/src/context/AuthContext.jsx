@@ -11,17 +11,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (role, credentials) => {
     try {
-      // If it's an admin and they only provide a secret key, we might need a special logic.
-      // Assuming our backend uses email/password for all. We'll map the key to a test admin account.
-      let email = credentials.email;
-      let password = credentials.password;
+      const { email, password } = credentials;
       
-      if (role === 'admin' && credentials.key) {
-        email = 'admin@civiceye.com';
-        password = credentials.key; // Using key as password for demo
-      }
-
-      const res = await api.post('/auth/login', { email, password });
+      const payload = { email, password, role };
+      console.log('Login Payload:', payload);
+      
+      const res = await api.post('/auth/login', payload);
       
       if (res.data.user.role !== role) {
         throw new Error('Role mismatch');

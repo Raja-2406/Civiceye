@@ -10,7 +10,15 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     
-    // Admin check logic could go here, but for simplicity we'll allow registration of both roles for testing.
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields: name, email, password, and role are required.' });
+    }
+
+    if (role === 'admin') {
+      if (!email.endsWith('@gov.in')) {
+        return res.status(403).json({ error: "Unauthorized domain. Admin registration requires a @gov.in email address." });
+      }
+    }
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -47,11 +55,20 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+
+    if (!email || !password || !role) {
+      return res.status(400).json({ error: 'Missing required fields: email, password, and role are required.' });
+    }
+
     const user = await User.findOne({ email });
     
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    if (role === 'admin' && user.role !== 'admin') {
+      return res.status(403).json({ error: "Access denied. You do not have administrator privileges." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

@@ -11,7 +11,6 @@ export default function Login() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [adminKey, setAdminKey] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
@@ -55,17 +54,13 @@ export default function Login() {
     
     const role = isCitizen ? 'citizen' : 'admin';
 
-    if (isRegister) {
-       success = await register(name, email, password, role);
-       if (!success) setError('Registration failed. Email might exist.');
-    } else {
-       if (isCitizen) {
-         success = await login('citizen', { email, password });
+       if (isRegister) {
+         success = await register(name, email, password, role);
+         if (!success) setError('Registration failed. Check if email is a valid @gov.in domain (for admins) or already exists.');
        } else {
-         success = await login('admin', { key: adminKey });
+         success = await login(role, { email, password });
+         if (!success) setError('Login failed. Check credentials and role privileges.');
        }
-       if (!success) setError('Login failed. Check credentials.');
-    }
 
     setLoading(false);
     if (success) {
@@ -113,29 +108,19 @@ export default function Login() {
                </div>
             )}
 
-            {isCitizen || isRegister ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">Email address</label>
-                  <div className="mt-1">
-                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">Password</label>
-                  <div className="mt-1">
-                    <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Admin Secret Key (Password)</label>
-                <div className="mt-1">
-                  <input type="password" required value={adminKey} onChange={e=>setAdminKey(e.target.value)} className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Email address {(!isCitizen && isRegister) && '(Must end in @gov.in)'}</label>
+              <div className="mt-1">
+                <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className={`appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`} />
               </div>
-            )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Password</label>
+              <div className="mt-1">
+                <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+              </div>
+            </div>
 
             <div>
               <button type="submit" disabled={loading} className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isCitizen ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-emerald-600 hover:bg-emerald-700'} disabled:opacity-50`}>
