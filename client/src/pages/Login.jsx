@@ -150,6 +150,7 @@ export default function Login() {
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap
+                use_fedcm_for_prompt={false}
               />
             </div>
           </div>

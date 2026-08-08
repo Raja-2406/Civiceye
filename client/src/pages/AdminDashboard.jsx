@@ -4,7 +4,10 @@ import { Shield, Search, Filter, LayoutDashboard, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
+import useAutoLogout from '../hooks/useAutoLogout';
+
 export default function AdminDashboard() {
+  useAutoLogout(); // 15-minute inactivity auto-logout
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
