@@ -75,4 +75,60 @@ router.post('/login', async (req, res) => {
   }
 });
 
+const { OAuth2Client } = require('google-auth-library');
+const GOOGLE_CLIENT_ID = '623498140904-44i46sdd6ie1i2or58bok106q3b78c40.apps.googleusercontent.com';
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    // Domain Whitelisting
+    const assignedRole = email.endsWith('@gov.in') ? 'admin' : 'citizen';
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      if (user.role !== assignedRole) {
+        user.role = assignedRole;
+        await user.save();
+      }
+    } else {
+      user = new User({
+        name,
+        email,
+        role: assignedRole,
+      });
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.status(200).json({
+      token,
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      }
+    });
+  } catch (error) {
+    console.error("Google Auth Error:", error);
+    res.status(500).json({ error: 'Server error during Google authentication' });
+  }
+});
+
 module.exports = router;

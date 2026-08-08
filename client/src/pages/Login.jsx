@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield, User } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import api from '../services/api';
 
 export default function Login() {
   const [isCitizen, setIsCitizen] = useState(true);
@@ -14,6 +16,36 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await api.post('/auth/google', {
+        credential: credentialResponse.credential,
+      });
+
+      const { token, user } = res.data;
+      
+      login(user, token);
+
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/citizen/dashboard');
+      }
+    } catch (err) {
+      console.error('Google login failed on backend:', err);
+      setError('Google authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error('Google Login Failed (Client Side)');
+    setError('Google login widget failed to load.');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,6 +148,25 @@ export default function Login() {
             <button onClick={() => setIsRegister(!isRegister)} className="text-indigo-600 hover:text-indigo-500">
               {isRegister ? 'Already have an account? Sign in' : 'Need an account? Register'}
             </button>
+          </div>
+          
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-slate-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+              />
+            </div>
           </div>
         </div>
       </div>
