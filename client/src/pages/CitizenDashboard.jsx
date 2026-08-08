@@ -136,7 +136,8 @@ export default function CitizenDashboard() {
       setView('list');
     } catch (err) {
       console.error(err);
-      alert('Failed to submit ticket.');
+      const errorMessage = err.response?.data?.error || 'Failed to submit ticket.';
+      alert(errorMessage);
     }
     setLoading(false);
   };
