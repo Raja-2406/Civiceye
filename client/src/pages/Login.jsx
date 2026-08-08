@@ -52,19 +52,20 @@ export default function Login() {
     setLoading(true);
     let success = false;
     
-    const role = isCitizen ? 'citizen' : 'admin';
+    const activeTab = isCitizen ? 'citizen' : 'admin';
+    const formattedEmail = email.trim();
 
-       if (isRegister) {
-         success = await register(name, email, password, role);
-         if (!success) setError('Registration failed. Check if email is a valid @gov.in domain (for admins) or already exists.');
-       } else {
-         success = await login(role, { email, password });
-         if (!success) setError('Login failed. Check credentials and role privileges.');
-       }
+    if (isRegister) {
+      success = await register(name, formattedEmail, password, activeTab);
+      if (!success) setError('Registration failed. Check if email is a valid @gov.in domain (for admins) or already exists.');
+    } else {
+      success = await login(activeTab, { email: formattedEmail, password });
+      if (!success) setError('Login failed. Check credentials and role privileges.');
+    }
 
     setLoading(false);
     if (success) {
-      navigate(isCitizen ? '/citizen/dashboard' : '/admin/dashboard');
+      navigate(activeTab === 'citizen' ? '/citizen/dashboard' : '/admin/dashboard');
     }
   };
 
